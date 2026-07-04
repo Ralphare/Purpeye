@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# PurpEye generated reports (don't commit scan outputs)
+report_*.pdf
+purpeye_report.pdf
+reports/
+
+# OS / editor junk
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Secrets - never commit API keys
+.env
+
