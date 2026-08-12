@@ -39,6 +39,24 @@ Each finding is rated **Critical / High / Medium / Low / Info**, and the report 
 
 ---
 
+## Example Reports
+
+PurpEye was validated against two contrasting targets to confirm it
+meaningfully distinguishes secure from insecure sites:
+
+- **[Vulnerable site — OWASP Juice Shop](examples/juice-shop-vulnerable-site.pdf)**
+  — a deliberately insecure practice application. PurpEye scored it **0/100
+  (Critical)**, with findings across every category (no HTTPS, missing
+  security headers, insecure cookies, and more).
+
+- **[Secure site — GitHub](examples/github-secure-site.pdf)** — a
+  well-configured production site, which scores substantially higher.
+
+This contrast demonstrates the scanner produces meaningful, differentiated
+results rather than flagging every site the same way.
+
+---
+
 ## How it works
 
 ```
