@@ -1,0 +1,124 @@
+name: Security Scan
+
+# Runs the security pipeline on every push and pull request to main,
+# plus a weekly scheduled run so new CVEs in dependencies get caught
+# even when the code hasn't changed.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * 1'   # every Monday 06:00 UTC
+  workflow_dispatch:        # lets you trigger it manually from the Actions tab
+
+# Least-privilege token: read the code, write security results to the
+# Security tab. Nothing else.
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # ------------------------------------------------------------------
+  # 1. SAST — finds vulnerable patterns in YOUR source code
+  #    (SQLi, command injection, unsafe deserialization, etc.)
+  # ------------------------------------------------------------------
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Semgrep
+        run: pip install semgrep
+
+      - name: Run Semgrep
+        # --config=auto pulls community rulesets matched to your languages.
+        # --sarif produces a machine-readable report for the Security tab.
+        # We don't hard-fail the build yet (|| true) so you can see results
+        # first. Remove "|| true" once you're ready to block on findings.
+        run: semgrep scan --config=auto --sarif --output=semgrep.sarif || true
+
+      - name: Upload Semgrep results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  # ------------------------------------------------------------------
+  # 2. Dependency scanning — finds known CVEs in the packages you import
+  #    (the vulnerable-library problem, not your own code)
+  # ------------------------------------------------------------------
+  dependencies:
+    name: Dependency Scan (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit dependencies
+        # Points at your requirements file. If your deps live somewhere else
+        # (pyproject.toml, Pipfile), see the notes in SECURITY_SCANNING.md.
+        run: pip-audit -r requirements.txt --desc || true
+
+  # ------------------------------------------------------------------
+  # 3. Secret scanning — catches API keys / tokens / passwords
+  #    accidentally committed anywhere in the repo history
+  # ------------------------------------------------------------------
+  secrets:
+    name: Secret Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so it scans past commits too
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ------------------------------------------------------------------
+  # 4. Container / filesystem scanning — finds CVEs in OS packages and
+  #    dependencies. Runs in filesystem mode by default (no Docker needed).
+  #    If you have a Dockerfile, see the notes to switch to image mode.
+  # ------------------------------------------------------------------
+  container:
+    name: Container/FS Scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy (filesystem)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '0'   # report only; set to '1' to fail on findings
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
