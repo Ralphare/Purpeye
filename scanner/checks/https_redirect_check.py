@@ -38,8 +38,8 @@ def check(target_url):
     http_url = f"http://{host}"
 
     try:
-        # Don't follow redirects yet - we want to SEE the redirect itself.
-        resp = requests.get(http_url, timeout=10, allow_redirects=False)
+        # Don't follow redirects yet - we want to SEE the redirect itself
+        resp = requests.get(http_url, timeout=10, allow_redirects=False) # nosemgrep: python.lang.security.audit.insecure-transport.requests.request-with-http.request-with-http
     except requests.exceptions.RequestException as error:
         # If plain HTTP refuses to connect at all, that's actually good -
         # it means the site isn't serving anything over HTTP.
