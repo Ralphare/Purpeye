@@ -80,12 +80,29 @@ The **AI explainer** runs in a free offline mode that builds the summary from th
 
 ---
 
+---
+
+## Security scanning (CI/CD)
+
+PurpEye's own codebase is continuously scanned by a GitHub Actions pipeline
+that runs on every push and pull request, plus a weekly scheduled run:
+
+| Stage | Tool | Purpose |
+|-------|------|---------|
+| SAST | Semgrep | Detects vulnerable patterns in the source code |
+| Dependency scanning | pip-audit | Flags known CVEs in Python dependencies |
+| Container / filesystem scanning | Trivy | Scans the filesystem for known vulnerabilities |
+| Secret detection | Gitleaks | Catches credentials accidentally committed to history |
+
+Semgrep and Trivy results are reported to GitHub's code scanning via SARIF.
+See [`SECURITY_SCANNING.md`](SECURITY_SCANNING.md) for details.
+
 ## Installation
 
 Requires Python 3.9+.
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/purpeye.git
+git clone https://github.com/Ralphare/Purpeye.git
 cd purpeye
 pip install -r requirements.txt
 ```
