@@ -43,7 +43,7 @@ jobs:
         # --sarif produces a machine-readable report for the Security tab.
         # We don't hard-fail the build yet (|| true) so you can see results
         # first. Remove "|| true" once you're ready to block on findings.
-        run: semgrep scan --config=auto --sarif --output=semgrep.sarif || true
+        run: semgrep scan --config=auto --sarif --output=semgrep.sarif
 
       - name: Upload Semgrep results
         uses: github/codeql-action/upload-sarif@v3
@@ -114,7 +114,7 @@ jobs:
           format: sarif
           output: trivy.sarif
           severity: CRITICAL,HIGH
-          exit-code: '0'   # report only; set to '1' to fail on findings
+          exit-code: '1'   # report only; set to '1' to fail on findings
 
       - name: Upload Trivy results
         uses: github/codeql-action/upload-sarif@v3
