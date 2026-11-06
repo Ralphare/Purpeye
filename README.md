@@ -1,5 +1,7 @@
 # PurpEye
 
+[![Security Scan](https://github.com/Ralphare/Purpeye/actions/workflows/security.yml/badge.svg)](https://github.com/Ralphare/Purpeye/actions/workflows/security.yml)
+
 **An AI-assisted passive web security scanner for small businesses.**
 
 PurpEye scans a website for common, high-impact security weaknesses, scores the overall risk from 0 to 100, and produces a clear, professional PDF report that explains — in plain English — what's wrong and how to fix it. It's built for people who can't afford a dedicated security team: point it at a site, get an actionable report.
@@ -80,12 +82,12 @@ The **AI explainer** runs in a free offline mode that builds the summary from th
 
 ---
 
----
-
 ## Security scanning (CI/CD)
 
-PurpEye's own codebase is continuously scanned by a GitHub Actions pipeline
-that runs on every push and pull request, plus a weekly scheduled run:
+PurpEye's own codebase is scanned by a GitHub Actions pipeline on every push
+and pull request, plus a weekly scheduled run. Each scanner is a **gate**:
+a finding at the blocking severity fails the build. The unit tests run in
+the same pipeline.
 
 | Stage | Tool | Purpose |
 |-------|------|---------|
@@ -95,6 +97,7 @@ that runs on every push and pull request, plus a weekly scheduled run:
 | Secret detection | Gitleaks | Catches credentials accidentally committed to history |
 
 Semgrep and Trivy results are reported to GitHub's code scanning via SARIF.
+Third-party actions are pinned to commit SHAs to reduce supply-chain risk.
 See [`SECURITY_SCANNING.md`](SECURITY_SCANNING.md) for details.
 
 ## Installation
@@ -103,7 +106,7 @@ Requires Python 3.9+.
 
 ```bash
 git clone https://github.com/Ralphare/Purpeye.git
-cd purpeye
+cd Purpeye
 pip install -r requirements.txt
 ```
 

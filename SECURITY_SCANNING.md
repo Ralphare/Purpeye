@@ -53,13 +53,24 @@ trivy fs .                            # filesystem scan
   to HTTPS. Semgrep flagged this as insecure transport; it is a documented
   false positive, suppressed inline with `nosemgrep`.
 
-## Turning it from "report" into "gate" (future work)
+## Security gates
 
-The scanners currently report but don't fail the build (`|| true`,
-`exit-code: '0'`). To make it a blocking security gate:
+Every scanner blocks the build, not just reports:
 
-- Semgrep: remove `|| true` so a finding fails the job.
-- Trivy: set `exit-code: '1'` to fail on CRITICAL/HIGH.
+| Stage | Fails the build when |
+|-------|----------------------|
+| Semgrep | any ERROR-severity finding (all findings still go to the Security tab) |
+| pip-audit | any dependency has a known vulnerability |
+| Gitleaks | a secret is found anywhere in history |
+| Trivy | any CRITICAL or HIGH finding |
+
+Unit tests run in the same workflow, so a change that breaks a check fails
+too. Third-party actions are pinned to a commit SHA rather than a branch,
+so an upstream compromise can't silently change what runs here.
+
+GitHub disables scheduled workflows in a repository with no activity for
+60 days. If the weekly run stops appearing, re-enable it from the
+**Actions** tab.
 
 ## Common mistakes
 
@@ -69,5 +80,5 @@ The scanners currently report but don't fail the build (`|| true`,
   upload fails.
 - **Gitleaks flagging test fixtures.** Add a `.gitleaks.toml` allowlist rather
   than deleting the tests.
-- **Trivy version pinning.** If a step breaks, check the action's latest
-  release tag.
+- **Trivy version pinning.** Pin to a release's commit SHA. If a step breaks,
+  update the SHA to the latest release tag's commit.
